@@ -189,7 +189,6 @@ class _DetailPageState extends State<DetailPage> {
                       itemCount: displayedProducts.length,
                       itemBuilder: (context, index) {
                         final product = displayedProducts[index];
-                        final randomNumber = _random.nextInt(100);
                         return Card(
                           child: ListTile(
                             onTap: () => _showOptionsDialog(context, product),
@@ -218,7 +217,7 @@ class _DetailPageState extends State<DetailPage> {
                                   ),
                                 ),
                                 Text(
-                                  'Quantity: ${product['quantity']}',
+                                  'Manufactured Date: ${product['date']}',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey,
@@ -226,7 +225,7 @@ class _DetailPageState extends State<DetailPage> {
                                 ),
                               ],
                             ),
-                            trailing: Text('Customer: ${product['customer']}'),
+                            trailing: Text(product['quantity']!),
                           ),
                         );
                       },
@@ -346,6 +345,7 @@ class _DetailPageState extends State<DetailPage> {
         TextEditingController(text: product['product']);
     final _editCodeController = TextEditingController(text: product['code']);
     final _editColorController = TextEditingController(text: product['color']);
+    final _editSizeController = TextEditingController(text: product['size']);
     final _editQuantityController =
         TextEditingController(text: product['quantity']);
     final GlobalKey<FormState> _editFormKey = GlobalKey<FormState>();
@@ -429,12 +429,48 @@ class _DetailPageState extends State<DetailPage> {
                     return null;
                   },
                 ),
-                TextFormField(
-                  controller: _editColorController,
-                  decoration: InputDecoration(labelText: 'Color'),
+                DropdownButtonFormField<String>(
+                  value: _editColorController.text,
+                  decoration: InputDecoration(
+                    labelText: 'Color',
+                  ),
+                  items: _productDetails.map((product) {
+                    return DropdownMenuItem<String>(
+                      value: product['color'],
+                      child: Text(product['color']!),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _editColorController.text = newValue!;
+                    });
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter product color';
+                    }
+                    return null;
+                  },
+                ),
+                DropdownButtonFormField<String>(
+                  value: _editSizeController.text,
+                  decoration: InputDecoration(
+                    labelText: 'Size',
+                  ),
+                  items: _sizes.map((size) {
+                    return DropdownMenuItem<String>(
+                      value: size,
+                      child: Text(size),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _editSizeController.text = newValue!;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a size';
                     }
                     return null;
                   },
@@ -468,6 +504,7 @@ class _DetailPageState extends State<DetailPage> {
                     product['product'] = _editProductController.text;
                     product['code'] = _editCodeController.text;
                     product['color'] = _editColorController.text;
+                    product['size'] = _editSizeController.text;
                     product['quantity'] = _editQuantityController.text;
                   });
                   Navigator.of(context).pop();
