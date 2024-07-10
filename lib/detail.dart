@@ -1,10 +1,7 @@
-// detail.dart
-
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'package:intl/intl.dart';
 import 'add_product.dart';
-import 'edit_product.dart'; // Import EditProductDialog
+import 'edit_product.dart';
 
 class DetailPage extends StatefulWidget {
   final String name;
@@ -52,6 +49,22 @@ class _DetailPageState extends State<DetailPage> {
   DateTime? _startDate;
   DateTime? _endDate;
 
+  List<String> _products = [];
+  List<String> _codes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _populateDropdownData();
+  }
+
+  void _populateDropdownData() {
+    _products = ['None'] +
+        _productDetails.map((product) => product['product']!).toSet().toList();
+    _codes = ['None'] +
+        _productDetails.map((product) => product['code']!).toSet().toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,16 +80,34 @@ class _DetailPageState extends State<DetailPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: TextFormField(
-                    controller: _searchProductController,
+                  child: DropdownButtonFormField<String>(
                     decoration: InputDecoration(labelText: 'Search Product'),
+                    items: _products.map((product) {
+                      return DropdownMenuItem<String>(
+                        value: product,
+                        child: Text(product),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      _searchProductController.text = newValue!;
+                    },
+                    value: 'None',
                   ),
                 ),
                 SizedBox(width: 10),
                 Expanded(
-                  child: TextFormField(
-                    controller: _searchCodeController,
+                  child: DropdownButtonFormField<String>(
                     decoration: InputDecoration(labelText: 'Search Code'),
+                    items: _codes.map((code) {
+                      return DropdownMenuItem<String>(
+                        value: code,
+                        child: Text(code),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      _searchCodeController.text = newValue!;
+                    },
+                    value: 'None',
                   ),
                 ),
               ],
@@ -91,7 +122,7 @@ class _DetailPageState extends State<DetailPage> {
                     controller: _startDate == null
                         ? TextEditingController(text: '')
                         : TextEditingController(
-                        text: DateFormat('yyyy-MM-dd').format(_startDate!)),
+                            text: DateFormat('yyyy-MM-dd').format(_startDate!)),
                     decoration: InputDecoration(
                       labelText: 'From',
                       suffixIcon: IconButton(
@@ -108,7 +139,7 @@ class _DetailPageState extends State<DetailPage> {
                     controller: _endDate == null
                         ? TextEditingController(text: '')
                         : TextEditingController(
-                        text: DateFormat('yyyy-MM-dd').format(_endDate!)),
+                            text: DateFormat('yyyy-MM-dd').format(_endDate!)),
                     decoration: InputDecoration(
                       labelText: 'To',
                       suffixIcon: IconButton(
@@ -139,14 +170,45 @@ class _DetailPageState extends State<DetailPage> {
                       : _searchResults[index];
                   return Card(
                     child: ListTile(
-                      title: Text('${product['customer']} - ${product['product']}'),
-                      subtitle: Text('Code: ${product['code']}, Color: ${product['color']}, Size: ${product['size']}, Quantity: ${product['quantity']}'),
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${product['product']}',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text('Size: ${product['size']}'),
+                              SizedBox(width: 16),
+                              Text('Color: ${product['color']}'),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Text('Customer: ${product['customer']}'),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                'Quantity: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                '${product['quantity']}',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: Icon(Icons.edit),
-                            onPressed: () => _showEditProductDialog(context, product),
+                            onPressed: () =>
+                                _showEditProductDialog(context, product),
                           ),
                           IconButton(
                             icon: Icon(Icons.delete),
@@ -179,7 +241,8 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
-  void _showEditProductDialog(BuildContext context, Map<String, String> product) {
+  void _showEditProductDialog(
+      BuildContext context, Map<String, String> product) {
     showDialog(
       context: context,
       builder: (context) => EditProductDialog(
@@ -198,7 +261,8 @@ class _DetailPageState extends State<DetailPage> {
 
   void _editProduct(Map<String, String> editedProduct) {
     setState(() {
-      int index = _productDetails.indexWhere((product) => product['code'] == editedProduct['code']);
+      int index = _productDetails
+          .indexWhere((product) => product['code'] == editedProduct['code']);
       if (index != -1) {
         _productDetails[index] = editedProduct;
       }
@@ -218,13 +282,13 @@ class _DetailPageState extends State<DetailPage> {
         bool matches = true;
 
         if (_searchProductController.text.isNotEmpty &&
-            !product['product']!.toLowerCase().contains(
-              _searchProductController.text.toLowerCase(),
-            )) {
+            _searchProductController.text != 'None' &&
+            product['product'] != _searchProductController.text) {
           matches = false;
         }
 
         if (_searchCodeController.text.isNotEmpty &&
+            _searchCodeController.text != 'None' &&
             product['code'] != _searchCodeController.text) {
           matches = false;
         }
