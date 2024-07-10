@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 import 'add_product.dart';
-import 'edit_product.dart'; // Add this import for EditProductDialog
+import 'edit_product.dart'; // Import EditProductDialog
 
 class DetailPage extends StatefulWidget {
   final String name;
@@ -42,114 +42,56 @@ class _DetailPageState extends State<DetailPage> {
       'color': 'Blue',
       'size': 'XL',
       'quantity': '40',
-      'date': '2023-05-20'
+      'date': '2023-06-20'
     },
-    // Add more products as needed
   ];
 
-  List<String> _sizes = [
-    "S/M",
-    "M/L",
-    "L/XL",
-    "S",
-    "M",
-    "L",
-    "XL",
-    "2XL",
-    "3XL",
-    "4XL",
-    "5XL"
-  ];
-
+  TextEditingController _searchProductController = TextEditingController();
+  TextEditingController _searchCodeController = TextEditingController();
   List<Map<String, String>> _searchResults = [];
   DateTime? _startDate;
   DateTime? _endDate;
-  Random _random = Random();
-
-  final TextEditingController _searchProductController =
-  TextEditingController();
-  final TextEditingController _searchCodeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final displayedProducts = _searchResults.isNotEmpty ||
-        _startDate != null ||
-        _endDate != null ||
-        _searchProductController.text.isNotEmpty ||
-        _searchCodeController.text.isNotEmpty
-        ? _searchResults
-        : _productDetails;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Details of ${widget.name}'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _showAddProductDialog(context),
-          ),
-        ],
+        title: Text('Product Details for ${widget.name}'),
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Search by',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: TextField(
+                  child: TextFormField(
                     controller: _searchProductController,
-                    decoration: InputDecoration(
-                      labelText: 'Product',
-                    ),
+                    decoration: InputDecoration(labelText: 'Search Product'),
                   ),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: 10),
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _searchCodeController.text.isEmpty
-                        ? null
-                        : _searchCodeController.text,
-                    decoration: InputDecoration(
-                      labelText: 'Code',
-                    ),
-                    items: _productDetails.map((product) {
-                      return DropdownMenuItem<String>(
-                        value: product['code'],
-                        child: Text(product['code']!),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _searchCodeController.text = newValue!;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a code';
-                      }
-                      return null;
-                    },
+                  child: TextFormField(
+                    controller: _searchCodeController,
+                    decoration: InputDecoration(labelText: 'Search Code'),
                   ),
                 ),
               ],
             ),
             SizedBox(height: 20),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: TextField(
+                  child: TextFormField(
                     readOnly: true,
-                    controller: TextEditingController(
-                        text: _startDate == null
-                            ? ''
-                            : DateFormat('yyyy-MM-dd').format(_startDate!)),
+                    controller: _startDate == null
+                        ? TextEditingController(text: '')
+                        : TextEditingController(
+                        text: DateFormat('yyyy-MM-dd').format(_startDate!)),
                     decoration: InputDecoration(
                       labelText: 'From',
                       suffixIcon: IconButton(
@@ -159,14 +101,14 @@ class _DetailPageState extends State<DetailPage> {
                     ),
                   ),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: 10),
                 Expanded(
-                  child: TextField(
+                  child: TextFormField(
                     readOnly: true,
-                    controller: TextEditingController(
-                        text: _endDate == null
-                            ? ''
-                            : DateFormat('yyyy-MM-dd').format(_endDate!)),
+                    controller: _endDate == null
+                        ? TextEditingController(text: '')
+                        : TextEditingController(
+                        text: DateFormat('yyyy-MM-dd').format(_endDate!)),
                     decoration: InputDecoration(
                       labelText: 'To',
                       suffixIcon: IconButton(
@@ -188,9 +130,13 @@ class _DetailPageState extends State<DetailPage> {
             SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
-                itemCount: displayedProducts.length,
+                itemCount: _searchResults.isEmpty
+                    ? _productDetails.length
+                    : _searchResults.length,
                 itemBuilder: (context, index) {
-                  final product = displayedProducts[index];
+                  final product = _searchResults.isEmpty
+                      ? _productDetails[index]
+                      : _searchResults[index];
                   return Card(
                     child: ListTile(
                       title: Text('${product['customer']} - ${product['product']}'),
@@ -216,6 +162,10 @@ class _DetailPageState extends State<DetailPage> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddProductDialog(context),
+        child: Icon(Icons.add),
+      ),
     );
   }
 
@@ -234,6 +184,7 @@ class _DetailPageState extends State<DetailPage> {
       context: context,
       builder: (context) => EditProductDialog(
         product: product,
+        productDetails: _productDetails,
         editProductCallback: _editProduct,
       ),
     );

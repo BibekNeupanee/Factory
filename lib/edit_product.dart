@@ -5,10 +5,12 @@ import 'package:intl/intl.dart';
 
 class EditProductDialog extends StatefulWidget {
   final Map<String, String> product;
+  final List<Map<String, String>> productDetails;
   final Function(Map<String, String>) editProductCallback;
 
   EditProductDialog({
     required this.product,
+    required this.productDetails,
     required this.editProductCallback,
   });
 
@@ -17,15 +19,20 @@ class EditProductDialog extends StatefulWidget {
 }
 
 class _EditProductDialogState extends State<EditProductDialog> {
+  final _editFormKey = GlobalKey<FormState>();
+
   final _editCustomerController = TextEditingController();
   final _editProductController = TextEditingController();
   final _editCodeController = TextEditingController();
   final _editColorController = TextEditingController();
   final _editSizeController = TextEditingController();
   final _editQuantityController = TextEditingController();
+  final _editDateController = TextEditingController();
 
-  final GlobalKey<FormState> _editFormKey = GlobalKey<FormState>();
-
+  List<String> _customers = [];
+  List<String> _products = [];
+  List<String> _codes = [];
+  List<String> _colors = [];
   List<String> _sizes = [
     "S/M",
     "M/L",
@@ -43,7 +50,27 @@ class _EditProductDialogState extends State<EditProductDialog> {
   @override
   void initState() {
     super.initState();
+    _populateDropdownData();
     _populateFields();
+  }
+
+  void _populateDropdownData() {
+    _customers = widget.productDetails
+        .map((product) => product['customer']!)
+        .toSet()
+        .toList();
+    _products = widget.productDetails
+        .map((product) => product['product']!)
+        .toSet()
+        .toList();
+    _codes = widget.productDetails
+        .map((product) => product['code']!)
+        .toSet()
+        .toList();
+    _colors = widget.productDetails
+        .map((product) => product['color']!)
+        .toSet()
+        .toList();
   }
 
   void _populateFields() {
@@ -53,6 +80,7 @@ class _EditProductDialogState extends State<EditProductDialog> {
     _editColorController.text = widget.product['color']!;
     _editSizeController.text = widget.product['size']!;
     _editQuantityController.text = widget.product['quantity']!;
+    _editDateController.text = widget.product['date']!;
   }
 
   @override
@@ -65,42 +93,94 @@ class _EditProductDialogState extends State<EditProductDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(
-                controller: _editCustomerController,
-                decoration: InputDecoration(labelText: 'Customer'),
+              DropdownButtonFormField<String>(
+                value: _editCustomerController.text,
+                decoration: InputDecoration(
+                  labelText: 'Customer',
+                ),
+                items: _customers.map((customer) {
+                  return DropdownMenuItem<String>(
+                    value: customer,
+                    child: Text(customer),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _editCustomerController.text = newValue!;
+                  });
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter customer name';
+                    return 'Please select a customer';
                   }
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _editProductController,
-                decoration: InputDecoration(labelText: 'Product'),
+              DropdownButtonFormField<String>(
+                value: _editProductController.text,
+                decoration: InputDecoration(
+                  labelText: 'Product',
+                ),
+                items: _products.map((product) {
+                  return DropdownMenuItem<String>(
+                    value: product,
+                    child: Text(product),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _editProductController.text = newValue!;
+                  });
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter product name';
+                    return 'Please select a product';
                   }
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _editCodeController,
-                decoration: InputDecoration(labelText: 'Code'),
+              DropdownButtonFormField<String>(
+                value: _editCodeController.text,
+                decoration: InputDecoration(
+                  labelText: 'Code',
+                ),
+                items: _codes.map((code) {
+                  return DropdownMenuItem<String>(
+                    value: code,
+                    child: Text(code),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _editCodeController.text = newValue!;
+                  });
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter product code';
+                    return 'Please select a code';
                   }
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _editColorController,
-                decoration: InputDecoration(labelText: 'Color'),
+              DropdownButtonFormField<String>(
+                value: _editColorController.text,
+                decoration: InputDecoration(
+                  labelText: 'Color',
+                ),
+                items: _colors.map((color) {
+                  return DropdownMenuItem<String>(
+                    value: color,
+                    child: Text(color),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _editColorController.text = newValue!;
+                  });
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter product color';
+                    return 'Please select a color';
                   }
                   return null;
                 },
@@ -134,7 +214,24 @@ class _EditProductDialogState extends State<EditProductDialog> {
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter product quantity';
+                    return 'Please enter quantity';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _editDateController,
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: 'Manufactured Date',
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.calendar_today),
+                    onPressed: _selectDate,
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select a date';
                   }
                   return null;
                 },
@@ -161,6 +258,7 @@ class _EditProductDialogState extends State<EditProductDialog> {
                 'color': _editColorController.text,
                 'size': _editSizeController.text,
                 'quantity': _editQuantityController.text,
+                'date': _editDateController.text,
               });
               Navigator.of(context).pop();
             }
@@ -168,5 +266,19 @@ class _EditProductDialogState extends State<EditProductDialog> {
         ),
       ],
     );
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        _editDateController.text = DateFormat('yyyy-MM-dd').format(picked);
+      });
+    }
   }
 }
