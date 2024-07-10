@@ -1,7 +1,10 @@
+// detail.dart
+
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 import 'add_product.dart';
+import 'edit_product.dart'; // Add this import for EditProductDialog
 
 class DetailPage extends StatefulWidget {
   final String name;
@@ -64,16 +67,16 @@ class _DetailPageState extends State<DetailPage> {
   Random _random = Random();
 
   final TextEditingController _searchProductController =
-      TextEditingController();
+  TextEditingController();
   final TextEditingController _searchCodeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     final displayedProducts = _searchResults.isNotEmpty ||
-            _startDate != null ||
-            _endDate != null ||
-            _searchProductController.text.isNotEmpty ||
-            _searchCodeController.text.isNotEmpty
+        _startDate != null ||
+        _endDate != null ||
+        _searchProductController.text.isNotEmpty ||
+        _searchCodeController.text.isNotEmpty
         ? _searchResults
         : _productDetails;
 
@@ -178,61 +181,37 @@ class _DetailPageState extends State<DetailPage> {
             SizedBox(height: 20),
             Center(
               child: ElevatedButton(
-                onPressed: _search,
+                onPressed: () => _searchProducts(),
                 child: Text('Search'),
               ),
             ),
             SizedBox(height: 20),
             Expanded(
-              child: displayedProducts.isNotEmpty
-                  ? ListView.builder(
-                      itemCount: displayedProducts.length,
-                      itemBuilder: (context, index) {
-                        final product = displayedProducts[index];
-                        return Card(
-                          child: ListTile(
-                            onTap: () => _showOptionsDialog(context, product),
-                            title: Text(
-                              product['product']!,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Color: ${product['color']}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Text(
-                                  'Size: ${product['size']}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Text(
-                                  'Manufactured Date: ${product['date']}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            trailing: Text(product['quantity']!),
+              child: ListView.builder(
+                itemCount: displayedProducts.length,
+                itemBuilder: (context, index) {
+                  final product = displayedProducts[index];
+                  return Card(
+                    child: ListTile(
+                      title: Text('${product['customer']} - ${product['product']}'),
+                      subtitle: Text('Code: ${product['code']}, Color: ${product['color']}, Size: ${product['size']}, Quantity: ${product['quantity']}'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () => _showEditProductDialog(context, product),
                           ),
-                        );
-                      },
-                    )
-                  : Center(
-                      child: Text('No products found.'),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () => _deleteProduct(index),
+                          ),
+                        ],
+                      ),
                     ),
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -243,12 +222,20 @@ class _DetailPageState extends State<DetailPage> {
   void _showAddProductDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AddProductDialog(
-          productDetails: _productDetails,
-          addProductCallback: _addProduct,
-        );
-      },
+      builder: (context) => AddProductDialog(
+        productDetails: _productDetails,
+        addProductCallback: _addProduct,
+      ),
+    );
+  }
+
+  void _showEditProductDialog(BuildContext context, Map<String, String> product) {
+    showDialog(
+      context: context,
+      builder: (context) => EditProductDialog(
+        product: product,
+        editProductCallback: _editProduct,
+      ),
     );
   }
 
@@ -258,29 +245,50 @@ class _DetailPageState extends State<DetailPage> {
     });
   }
 
-  void _search() {
+  void _editProduct(Map<String, String> editedProduct) {
+    setState(() {
+      int index = _productDetails.indexWhere((product) => product['code'] == editedProduct['code']);
+      if (index != -1) {
+        _productDetails[index] = editedProduct;
+      }
+    });
+  }
+
+  void _deleteProduct(int index) {
+    setState(() {
+      _productDetails.removeAt(index);
+    });
+  }
+
+  void _searchProducts() {
     setState(() {
       _searchResults.clear();
       _productDetails.forEach((product) {
-        final productNameMatch = _searchProductController.text.isEmpty ||
-            product['product']!
-                .toLowerCase()
-                .contains(_searchProductController.text.toLowerCase());
-        final productCodeMatch = _searchCodeController.text.isEmpty ||
-            product['code'] == _searchCodeController.text;
-        final startDateMatch = _startDate == null ||
-            product['date']!.compareTo(
-                    _startDate!.toLocal().toString().split(' ')[0]) >=
-                0;
-        final endDateMatch = _endDate == null ||
-            product['date']!
-                    .compareTo(_endDate!.toLocal().toString().split(' ')[0]) <=
-                0;
+        bool matches = true;
 
-        if (productNameMatch &&
-            productCodeMatch &&
-            startDateMatch &&
-            endDateMatch) {
+        if (_searchProductController.text.isNotEmpty &&
+            !product['product']!.toLowerCase().contains(
+              _searchProductController.text.toLowerCase(),
+            )) {
+          matches = false;
+        }
+
+        if (_searchCodeController.text.isNotEmpty &&
+            product['code'] != _searchCodeController.text) {
+          matches = false;
+        }
+
+        if (_startDate != null &&
+            DateTime.parse(product['date']!).isBefore(_startDate!)) {
+          matches = false;
+        }
+
+        if (_endDate != null &&
+            DateTime.parse(product['date']!).isAfter(_endDate!)) {
+          matches = false;
+        }
+
+        if (matches) {
           _searchResults.add(product);
         }
       });
@@ -294,7 +302,7 @@ class _DetailPageState extends State<DetailPage> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != (isStartDate ? _startDate : _endDate)) {
+    if (picked != null) {
       setState(() {
         if (isStartDate) {
           _startDate = picked;
@@ -303,248 +311,5 @@ class _DetailPageState extends State<DetailPage> {
         }
       });
     }
-  }
-
-  void _showOptionsDialog(BuildContext context, Map<String, String> product) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Options for ${product['product']}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              ListTile(
-                leading: Icon(Icons.edit),
-                title: Text('Edit'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _showEditProductDialog(context, product);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.delete),
-                title: Text('Delete'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _confirmDelete(context, product);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showEditProductDialog(
-      BuildContext context, Map<String, String> product) {
-    final _editCustomerController =
-        TextEditingController(text: product['customer']);
-    final _editProductController =
-        TextEditingController(text: product['product']);
-    final _editCodeController = TextEditingController(text: product['code']);
-    final _editColorController = TextEditingController(text: product['color']);
-    final _editSizeController = TextEditingController(text: product['size']);
-    final _editQuantityController =
-        TextEditingController(text: product['quantity']);
-    final GlobalKey<FormState> _editFormKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Edit Product'),
-          content: Form(
-            key: _editFormKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String>(
-                  value: _editCustomerController.text,
-                  decoration: InputDecoration(
-                    labelText: 'Customer',
-                  ),
-                  items: _productDetails.map((product) {
-                    return DropdownMenuItem<String>(
-                      value: product['customer'],
-                      child: Text(product['customer']!),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _editCustomerController.text = newValue!;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a customer';
-                    }
-                    return null;
-                  },
-                ),
-                DropdownButtonFormField<String>(
-                  value: _editProductController.text,
-                  decoration: InputDecoration(
-                    labelText: 'Product',
-                  ),
-                  items: _productDetails.map((product) {
-                    return DropdownMenuItem<String>(
-                      value: product['product'],
-                      child: Text(product['product']!),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _editProductController.text = newValue!;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a product';
-                    }
-                    return null;
-                  },
-                ),
-                DropdownButtonFormField<String>(
-                  value: _editCodeController.text,
-                  decoration: InputDecoration(
-                    labelText: 'Code',
-                  ),
-                  items: _productDetails.map((product) {
-                    return DropdownMenuItem<String>(
-                      value: product['code'],
-                      child: Text(product['code']!),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _editCodeController.text = newValue!;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a code';
-                    }
-                    return null;
-                  },
-                ),
-                DropdownButtonFormField<String>(
-                  value: _editColorController.text,
-                  decoration: InputDecoration(
-                    labelText: 'Color',
-                  ),
-                  items: _productDetails.map((product) {
-                    return DropdownMenuItem<String>(
-                      value: product['color'],
-                      child: Text(product['color']!),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _editColorController.text = newValue!;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter product color';
-                    }
-                    return null;
-                  },
-                ),
-                DropdownButtonFormField<String>(
-                  value: _editSizeController.text,
-                  decoration: InputDecoration(
-                    labelText: 'Size',
-                  ),
-                  items: _sizes.map((size) {
-                    return DropdownMenuItem<String>(
-                      value: size,
-                      child: Text(size),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _editSizeController.text = newValue!;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a size';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: _editQuantityController,
-                  decoration: InputDecoration(labelText: 'Quantity'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter product quantity';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Save'),
-              onPressed: () {
-                if (_editFormKey.currentState!.validate()) {
-                  setState(() {
-                    product['customer'] = _editCustomerController.text;
-                    product['product'] = _editProductController.text;
-                    product['code'] = _editCodeController.text;
-                    product['color'] = _editColorController.text;
-                    product['size'] = _editSizeController.text;
-                    product['quantity'] = _editQuantityController.text;
-                  });
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _confirmDelete(BuildContext context, Map<String, String> product) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Confirm Delete'),
-          content:
-              Text('Are you sure you want to delete ${product['product']}?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Delete'),
-              onPressed: () {
-                setState(() {
-                  _productDetails.remove(product);
-                  _search();
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 }
