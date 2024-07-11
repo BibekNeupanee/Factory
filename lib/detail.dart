@@ -22,6 +22,7 @@ class _DetailPageState extends State<DetailPage> {
       'color': 'Blue',
       'size': 'M',
       'quantity': '50',
+      'received': '30',
       'date': '2023-07-01',
     },
     {
@@ -31,6 +32,7 @@ class _DetailPageState extends State<DetailPage> {
       'color': 'Black',
       'size': 'L',
       'quantity': '30',
+      'received': '20',
       'date': '2023-06-15',
     },
     {
@@ -40,6 +42,7 @@ class _DetailPageState extends State<DetailPage> {
       'color': 'Blue',
       'size': 'XL',
       'quantity': '40',
+      'received': '35',
       'date': '2023-06-20',
     },
   ];
