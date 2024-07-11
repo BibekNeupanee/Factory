@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'add_product.dart';
 import 'edit_product.dart';
+import 'to_receive.dart';
 
 class DetailPage extends StatefulWidget {
   final String name;
@@ -21,7 +22,7 @@ class _DetailPageState extends State<DetailPage> {
       'color': 'Blue',
       'size': 'M',
       'quantity': '50',
-      'date': '2023-07-01'
+      'date': '2023-07-01',
     },
     {
       'customer': 'Jane Smith',
@@ -30,7 +31,7 @@ class _DetailPageState extends State<DetailPage> {
       'color': 'Black',
       'size': 'L',
       'quantity': '30',
-      'date': '2023-06-15'
+      'date': '2023-06-15',
     },
     {
       'customer': 'Alice Johnson',
@@ -39,7 +40,7 @@ class _DetailPageState extends State<DetailPage> {
       'color': 'Blue',
       'size': 'XL',
       'quantity': '40',
-      'date': '2023-06-20'
+      'date': '2023-06-20',
     },
   ];
 
@@ -76,6 +77,30 @@ class _DetailPageState extends State<DetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Products',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              ToReceivePage(productDetails: _productDetails)),
+                    );
+                  },
+                  child: Text('To Receive'),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -188,18 +213,7 @@ class _DetailPageState extends State<DetailPage> {
                           SizedBox(height: 8),
                           Text('Customer: ${product['customer']}'),
                           SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text(
-                                'Quantity: ',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                '${product['quantity']}',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
+                          Text('Quantity: ${product['quantity']}'),
                         ],
                       ),
                       trailing: Row(
