@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'add_product.dart';
 import 'edit_product.dart';
 import 'to_receive.dart';
+import 'assign_product.dart'; // Import the assign_product.dart file
 
 class DetailPage extends StatefulWidget {
   final String name;
@@ -22,8 +23,8 @@ class _DetailPageState extends State<DetailPage> {
       'color': 'Blue',
       'size': 'M',
       'quantity': '50',
-      'received': '30',
       'date': '2023-07-01',
+      'received': '30',
     },
     {
       'customer': 'Jane Smith',
@@ -32,8 +33,8 @@ class _DetailPageState extends State<DetailPage> {
       'color': 'Black',
       'size': 'L',
       'quantity': '30',
-      'received': '20',
       'date': '2023-06-15',
+      'received': '20',
     },
     {
       'customer': 'Alice Johnson',
@@ -42,8 +43,8 @@ class _DetailPageState extends State<DetailPage> {
       'color': 'Blue',
       'size': 'XL',
       'quantity': '40',
-      'received': '35',
       'date': '2023-06-20',
+      'received': '35',
     },
   ];
 
@@ -216,7 +217,8 @@ class _DetailPageState extends State<DetailPage> {
                           SizedBox(height: 8),
                           Text('Customer: ${product['customer']}'),
                           SizedBox(height: 8),
-                          Text('Quantity: ${product['quantity']}'),
+                          Text('Quantity: ${product['quantity']}',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                       trailing: Row(
@@ -242,7 +244,39 @@ class _DetailPageState extends State<DetailPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddProductDialog(context),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (context) => Wrap(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.add),
+                  title: Text('Add Product'),
+                  onTap: () {
+                    Navigator.pop(context); // Close the bottom sheet
+                    _showAddProductDialog(context);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.assignment),
+                  title: Text('Assign Product To'),
+                  onTap: () {
+                    Navigator.pop(context); // Close the bottom sheet
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AssignProductPage(
+                          name: widget.name,
+                          productDetails: _productDetails,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          );
+        },
         child: Icon(Icons.add),
       ),
     );
@@ -327,7 +361,7 @@ class _DetailPageState extends State<DetailPage> {
     });
   }
 
-  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+  Future<void> _selectDate(BuildContext context, bool isStart) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -336,7 +370,7 @@ class _DetailPageState extends State<DetailPage> {
     );
     if (picked != null) {
       setState(() {
-        if (isStartDate) {
+        if (isStart) {
           _startDate = picked;
         } else {
           _endDate = picked;
