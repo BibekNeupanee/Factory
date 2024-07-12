@@ -13,10 +13,12 @@ class LoginPage extends StatelessWidget {
     if (username == 'admin' && password == 'admin') {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('username', username); // Save the username
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => DashboardPage(title: 'Dashboard')),
+        MaterialPageRoute(
+            builder: (context) => DashboardPage(title: 'Dashboard')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
