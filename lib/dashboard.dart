@@ -29,52 +29,61 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-        ),
-        drawer: NavBar(),
-        body: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: widget.title == 'Dashboard'
-              ? Column(
-                  children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Search',
-                        suffixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          query = value;
-                        });
-                      },
-                    ),
-                    Expanded(
-                      child: ListView(
-                        children: names
-                            .where((name) => name
-                                .toLowerCase()
-                                .startsWith(query.toLowerCase()))
-                            .map((name) => ListTile(
-                                  title: Text(name),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            DetailPage(name: name),
-                                      ),
-                                    );
-                                  },
-                                ))
-                            .toList(),
-                      ),
-                    ),
-                  ],
-                )
-              : Center(
-                  child: Text('You are in ${widget.title}'),
-                ),
-        ));
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      drawer: NavBar(),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: _buildBody(),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (widget.title == 'Dashboard') {
+      return Column(
+        children: [
+          TextField(
+            decoration: InputDecoration(
+              labelText: 'Search',
+              suffixIcon: Icon(Icons.search),
+            ),
+            onChanged: (value) {
+              setState(() {
+                query = value;
+              });
+            },
+          ),
+          Expanded(
+            child: ListView(
+              children: names
+                  .where((name) =>
+                      name.toLowerCase().startsWith(query.toLowerCase()))
+                  .map((name) => ListTile(
+                        title: Text(name),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DetailPage(name: name),
+                            ),
+                          );
+                        },
+                      ))
+                  .toList(),
+            ),
+          ),
+        ],
+      );
+    } else if (widget.title == 'Add Order') {
+      return Center(
+        child: Text('You are not in ${widget.title}'),
+      );
+    } else {
+      return Center(
+        child: Text('You are in ${widget.title}'),
+      );
+    }
   }
 }
