@@ -1,0 +1,59 @@
+[33mcommit a138752fafc607c30af21746c95813ed86507a29[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: Bibek Neupane~ <nbibek17@gmail.com>
+Date:   Fri Jul 12 19:31:55 2024 +0545
+
+    added Add Order in nav_bar
+
+[33mcommit f594fa4e739e895ea650820e5aeb325015f8900f[m
+Author: Bibek Neupane~ <nbibek17@gmail.com>
+Date:   Fri Jul 12 14:18:20 2024 +0545
+
+    added loggedin name in nav_bar
+
+[33mcommit 419c29b5a37078ae0ab63aeafb88bdeb5c761be7[m
+Author: Bibek Neupane~ <nbibek17@gmail.com>
+Date:   Thu Jul 11 19:20:05 2024 +0545
+
+    added assign pannel
+
+[33mcommit 0cf3d39ea4fa5baa573149783239c3d7894338ea[m
+Author: Bibek Neupane~ <nbibek17@gmail.com>
+Date:   Thu Jul 11 13:11:52 2024 +0545
+
+    fixed to_receive.dart
+
+[33mcommit 3945fda9af3bc9cdce6ab6081760152bb4d89221[m
+Author: Bibek Neupane~ <nbibek17@gmail.com>
+Date:   Thu Jul 11 09:47:39 2024 +0545
+
+    added to be returned tab/button in detail.dart
+
+[33mcommit 5d8f11200cc8e4559f2ce64360d9945f66e30839[m
+Author: Bibek Neupane~ <nbibek17@gmail.com>
+Date:   Wed Jul 10 12:56:45 2024 +0545
+
+    made search workable
+
+[33mcommit e42d3c17e8553b9f8bc36d133529480532eda039[m
+Author: Bibek Neupane~ <nbibek17@gmail.com>
+Date:   Wed Jul 10 11:17:24 2024 +0545
+
+    made every feild inside edit menu dropdown
+
+[33mcommit 8c75bcf0b6da0af6cec47da15180ec016e44e8c9[m
+Author: Bibek Neupane~ <nbibek17@gmail.com>
+Date:   Wed Jul 10 11:01:19 2024 +0545
+
+    removed edit button code from detail page and made new file
+
+[33mcommit 5044fc5a11777b246def61a806994a75437fa618[m
+Author: Bibek Neupane~ <nbibek17@gmail.com>
+Date:   Tue Jul 9 20:40:09 2024 +0545
+
+    added dropdown to add_product and normal change in table
+
+[33mcommit 0dc1375163dcd518d038c64ffe4a2c2bf9bb06da[m
+Author: Bibek Neupane~ <nbibek17@gmail.com>
+Date:   Tue Jul 9 20:25:12 2024 +0545
+
+    First Commit
