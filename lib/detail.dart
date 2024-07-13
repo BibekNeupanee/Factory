@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import 'add_product.dart';
 import 'edit_product.dart';
 import 'to_receive.dart';
-import 'assign_product.dart'; // Import the assign_product.dart file
+import 'assign_product.dart';
+import 'ledger.dart';
 
 class DetailPage extends StatefulWidget {
   final String name;
@@ -79,13 +80,14 @@ class _DetailPageState extends State<DetailPage> {
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
+
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Products',
+                  'Search Products',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
@@ -97,10 +99,12 @@ class _DetailPageState extends State<DetailPage> {
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              ToReceivePage(productDetails: _productDetails)),
+                              LedgerPage()
+                              // LedgerPage(name: widget.name)
+                      ),
                     );
                   },
-                  child: Text('To Receive'),
+                  child: Text('Ledger of ${widget.name}'),
                 ),
               ],
             ),
@@ -180,12 +184,38 @@ class _DetailPageState extends State<DetailPage> {
                 ),
               ],
             ),
-            SizedBox(height: 20),
-            Center(
+            SizedBox(height: 40),
+            Container(
               child: ElevatedButton(
                 onPressed: () => _searchProducts(),
                 child: Text('Search'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(50, 40), // Adjust height here
+                ),
               ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Products',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              ToReceivePage(productDetails: _productDetails)),
+                    );
+                  },
+                  child: Text('To Receive'),
+                ),
+              ],
             ),
             SizedBox(height: 20),
             Expanded(
@@ -259,7 +289,7 @@ class _DetailPageState extends State<DetailPage> {
                 ),
                 ListTile(
                   leading: Icon(Icons.assignment),
-                  title: Text('Assign Product To'),
+                  title: Text('Assign Product'),
                   onTap: () {
                     Navigator.pop(context); // Close the bottom sheet
                     Navigator.push(
