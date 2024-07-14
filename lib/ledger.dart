@@ -4,16 +4,17 @@ import 'package:intl/intl.dart';
 class LedgerEntry {
   final DateTime date;
   final String particular;
-  final double debit; // Previously work as debit
-  final double credit; // Previously cash as credit
+  double debit; // Previously work as debit
+  double credit; // Previously cash as credit
   double total; // Running total accumulated
 
-  LedgerEntry(
-      {required this.date,
-      required this.particular,
-      required this.debit,
-      required this.credit,
-      this.total = 0.0});
+  LedgerEntry({
+    required this.date,
+    required this.particular,
+    required this.debit,
+    required this.credit,
+    this.total = 0.0,
+  });
 }
 
 class LedgerPage extends StatefulWidget {
@@ -22,6 +23,30 @@ class LedgerPage extends StatefulWidget {
 }
 
 class _LedgerPageState extends State<LedgerPage> {
+  Future<void> _selectDate(BuildContext context, bool isFromDate) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: isFromDate
+          ? (fromDate ?? DateTime.now())
+          : (toDate ?? fromDate ?? DateTime.now()),
+      firstDate: DateTime(2000),
+      lastDate: isFromDate
+          ? DateTime(2101)
+          : (fromDate?.add(Duration(days: 30)) ?? DateTime.now()),
+    );
+    if (picked != null &&
+        (isFromDate ? picked != fromDate : picked != toDate)) {
+      setState(() {
+        if (isFromDate) {
+          fromDate = picked;
+          toDate = null;
+        } else {
+          toDate = picked;
+        }
+      });
+    }
+  }
+
   List<LedgerEntry> entries = [];
   List<LedgerEntry> filteredEntries = [];
   DateTime? fromDate;
@@ -53,30 +78,6 @@ class _LedgerPageState extends State<LedgerPage> {
     filteredEntries = List.from(entries);
   }
 
-  Future<void> _selectDate(BuildContext context, bool isFromDate) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: isFromDate
-          ? (fromDate ?? DateTime.now())
-          : (toDate ?? fromDate ?? DateTime.now()),
-      firstDate: DateTime(2000),
-      lastDate: isFromDate
-          ? DateTime(2101)
-          : (fromDate?.add(Duration(days: 30)) ?? DateTime.now()),
-    );
-    if (picked != null &&
-        (isFromDate ? picked != fromDate : picked != toDate)) {
-      setState(() {
-        if (isFromDate) {
-          fromDate = picked;
-          toDate = null;
-        } else {
-          toDate = picked;
-        }
-      });
-    }
-  }
-
   void _filterEntries() {
     setState(() {
       filteredEntries = entries
@@ -97,6 +98,41 @@ class _LedgerPageState extends State<LedgerPage> {
       entry.total = runningTotal;
     });
     cumulativeTotal = runningTotal;
+  }
+
+  void _editCredit(LedgerEntry entry) async {
+    TextEditingController _controller =
+        TextEditingController(text: entry.credit.toString());
+    await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Edit Credit for ${entry.particular}"),
+            content: TextField(
+              controller: _controller,
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(labelText: "Credit Amount"),
+            ),
+            actions: [
+              TextButton(
+                child: Text("Cancel"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text("Save"),
+                onPressed: () {
+                  setState(() {
+                    entry.credit = double.parse(_controller.text);
+                    _calculateTotals(); // Recalculate totals after editing
+                  });
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
   }
 
   @override
@@ -167,29 +203,19 @@ class _LedgerPageState extends State<LedgerPage> {
                     DataColumn(label: Text('Credit (Cash)')),
                     DataColumn(label: Text('Total')),
                   ],
-                  rows: [
-                    ...filteredEntries
-                        .map((entry) => DataRow(cells: [
-                              DataCell(Text(
-                                  DateFormat('yyyy-MM-dd').format(entry.date))),
-                              DataCell(Text(entry.particular)),
-                              DataCell(
-                                  Text('${entry.debit.toStringAsFixed(2)}')),
-                              DataCell(
-                                  Text('${entry.credit.toStringAsFixed(2)}')),
-                              DataCell(
-                                  Text('${entry.total.toStringAsFixed(2)}')),
-                            ]))
-                        .toList(),
-                    DataRow(cells: [
-                      DataCell(Text('')),
-                      DataCell(Text('Total:')),
-                      DataCell(Text('')),
-                      DataCell(Text('')),
-                      DataCell(Text('${cumulativeTotal.toStringAsFixed(2)}',
-                          style: TextStyle(fontWeight: FontWeight.bold))),
-                    ]),
-                  ],
+                  rows: filteredEntries
+                      .map((entry) => DataRow(cells: [
+                            DataCell(Text(
+                                DateFormat('yyyy-MM-dd').format(entry.date))),
+                            DataCell(Text(entry.particular)),
+                            DataCell(Text('${entry.debit.toStringAsFixed(2)}')),
+                            DataCell(
+                              Text('${entry.credit.toStringAsFixed(2)}'),
+                              onTap: () => _editCredit(entry),
+                            ),
+                            DataCell(Text('${entry.total.toStringAsFixed(2)}')),
+                          ]))
+                      .toList(),
                 ),
               ),
             ),
