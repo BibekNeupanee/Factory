@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'add_amount.dart';
 
 class LedgerEntry {
   final DateTime date;
@@ -135,11 +136,31 @@ class _LedgerPageState extends State<LedgerPage> {
         });
   }
 
+  void _showAddEntryDialog() async {
+    final newEntry = await showDialog<LedgerEntry>(
+      context: context,
+      builder: (context) => AddAmountPage(),
+    );
+
+    if (newEntry != null) {
+      setState(() {
+        entries.add(newEntry);
+        _calculateTotals();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Ledger Details"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: _showAddEntryDialog,
+          ),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
