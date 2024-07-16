@@ -34,11 +34,16 @@ class _AddOrderPageState extends State<AddOrderPage> {
 
   final _formKey = GlobalKey<FormState>();
 
+  int _totalQuantity = 0;
+
   void _addNewColor() {
     setState(() {
       _colors.add('');
-      _quantities.add(
-          {for (var size in _selectedSizes) size: TextEditingController()});
+      _quantities.add({
+        for (var size in _selectedSizes)
+          size: TextEditingController()
+            ..addListener(() => _updateTotalQuantity())
+      });
     });
   }
 
@@ -46,7 +51,8 @@ class _AddOrderPageState extends State<AddOrderPage> {
     setState(() {
       _selectedSizes.add('');
       for (var quantity in _quantities) {
-        quantity[_selectedSizes.last] = TextEditingController();
+        quantity[_selectedSizes.last] = TextEditingController()
+          ..addListener(() => _updateTotalQuantity());
       }
     });
   }
@@ -55,6 +61,7 @@ class _AddOrderPageState extends State<AddOrderPage> {
     setState(() {
       _colors.removeAt(index);
       _quantities.removeAt(index);
+      _updateTotalQuantity();
     });
   }
 
@@ -65,6 +72,7 @@ class _AddOrderPageState extends State<AddOrderPage> {
       for (var quantity in _quantities) {
         quantity.remove(sizeToRemove);
       }
+      _updateTotalQuantity();
     });
   }
 
@@ -100,8 +108,21 @@ class _AddOrderPageState extends State<AddOrderPage> {
         _colors.clear();
         _selectedSizes.clear();
         _quantities.clear();
+        _totalQuantity = 0;
       });
     }
+  }
+
+  void _updateTotalQuantity() {
+    int total = 0;
+    for (var quantity in _quantities) {
+      for (var controller in quantity.values) {
+        total += int.tryParse(controller.text) ?? 0;
+      }
+    }
+    setState(() {
+      _totalQuantity = total;
+    });
   }
 
   Future<void> _selectDate(
@@ -205,7 +226,7 @@ class _AddOrderPageState extends State<AddOrderPage> {
                   children: [
                     TableRow(
                       children: [
-                        TableCell(child: Center(child: Text('Color/Code'))),
+                        TableCell(child: Center(child: Text('Color'))),
                         ..._selectedSizes.asMap().entries.map((entry) {
                           int index = entry.key;
                           String size = entry.value;
@@ -229,7 +250,9 @@ class _AddOrderPageState extends State<AddOrderPage> {
                                         // Update quantities map with new size
                                         for (var quantity in _quantities) {
                                           quantity[newValue] =
-                                              TextEditingController();
+                                              TextEditingController()
+                                                ..addListener(() =>
+                                                    _updateTotalQuantity());
                                         }
                                       });
                                     },
@@ -284,8 +307,8 @@ class _AddOrderPageState extends State<AddOrderPage> {
                           ),
                           ..._selectedSizes.map((size) {
                             if (!_quantities[index].containsKey(size)) {
-                              _quantities[index][size] =
-                                  TextEditingController();
+                              _quantities[index][size] = TextEditingController()
+                                ..addListener(() => _updateTotalQuantity());
                             }
                             return TableCell(
                               child: TextFormField(
@@ -327,6 +350,11 @@ class _AddOrderPageState extends State<AddOrderPage> {
               ],
             ),
             SizedBox(height: 20),
+            Text(
+              'Total: $_totalQuantity',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
             ElevatedButton(
               onPressed: _addOrder,
               child: Text('Add Order'),
