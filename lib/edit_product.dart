@@ -1,5 +1,3 @@
-// edit_product.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -27,6 +25,7 @@ class _EditProductDialogState extends State<EditProductDialog> {
   final _editColorController = TextEditingController();
   final _editSizeController = TextEditingController();
   final _editQuantityController = TextEditingController();
+  final _editAlterController = TextEditingController();
   final _editDateController = TextEditingController();
 
   List<String> _customers = [];
@@ -80,6 +79,7 @@ class _EditProductDialogState extends State<EditProductDialog> {
     _editColorController.text = widget.product['color']!;
     _editSizeController.text = widget.product['size']!;
     _editQuantityController.text = widget.product['quantity']!;
+    _editAlterController.text = widget.product['alter']!;
     _editDateController.text = widget.product['date']!;
   }
 
@@ -220,6 +220,17 @@ class _EditProductDialogState extends State<EditProductDialog> {
                 },
               ),
               TextFormField(
+                controller: _editAlterController,
+                decoration: InputDecoration(labelText: 'Alter Quantity'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter alter quantity';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
                 controller: _editDateController,
                 readOnly: true,
                 decoration: InputDecoration(
@@ -258,6 +269,7 @@ class _EditProductDialogState extends State<EditProductDialog> {
                 'color': _editColorController.text,
                 'size': _editSizeController.text,
                 'quantity': _editQuantityController.text,
+                'alter': _editAlterController.text,
                 'date': _editDateController.text,
               });
               Navigator.of(context).pop();

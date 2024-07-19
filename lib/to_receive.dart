@@ -20,8 +20,11 @@ class _ToReceivePageState extends State<ToReceivePage> {
 
   void _filterProductsToReceive() {
     productsToReceive = widget.productDetails.where((product) {
-      int remaining =
-          int.parse(product['quantity']!) - int.parse(product['received']!);
+      int quantity = int.tryParse(product['quantity'] ?? '0') ?? 0;
+      int received = int.tryParse(product['received'] ?? '0') ?? 0;
+      int alter = int.tryParse(product['alter'] ?? '0') ?? 0;
+      int remaining = quantity - received - alter;
+
       return remaining > 0;
     }).toList();
   }
@@ -30,16 +33,35 @@ class _ToReceivePageState extends State<ToReceivePage> {
       BuildContext context, Map<String, String> product) {
     TextEditingController _receivedController =
         TextEditingController(text: product['received']);
+    TextEditingController _receivingController =
+        TextEditingController(text: '0');
+    TextEditingController _alterController =
+        TextEditingController(text: product['alter']);
+    int quantity = int.tryParse(product['quantity'] ?? '0') ?? 0;
+    int received = int.tryParse(product['received'] ?? '0') ?? 0;
+    int alter = int.tryParse(product['alter'] ?? '0') ?? 0;
+    int remaining = quantity - received - alter;
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text('Edit Received Quantity'),
-          content: TextField(
-            controller: _receivedController,
-            decoration: InputDecoration(labelText: 'Received Quantity'),
-            keyboardType: TextInputType.number,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Remaining Quantity: $remaining'),
+              TextField(
+                controller: _receivingController,
+                decoration: InputDecoration(labelText: 'Receiving'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: _alterController,
+                decoration: InputDecoration(labelText: 'Alter'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
           ),
           actions: <Widget>[
             TextButton(
@@ -51,11 +73,26 @@ class _ToReceivePageState extends State<ToReceivePage> {
             TextButton(
               child: Text('Save'),
               onPressed: () {
-                setState(() {
-                  product['received'] = _receivedController.text;
-                  _filterProductsToReceive(); // Refresh the list to reflect changes
-                });
-                Navigator.of(context).pop();
+                int receivingValue =
+                    int.tryParse(_receivingController.text) ?? 0;
+                int alterValue = int.tryParse(_alterController.text) ?? 0;
+
+                if ((quantity - received - receivingValue - alterValue) < 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'Receiving quantity cannot be greater than total quantity'),
+                    ),
+                  );
+                } else {
+                  setState(() {
+                    product['received'] =
+                        (received + receivingValue).toString();
+                    product['alter'] = alterValue.toString();
+                    _filterProductsToReceive(); // Refresh the list to reflect changes
+                  });
+                  Navigator.of(context).pop();
+                }
               },
             ),
           ],
@@ -74,8 +111,12 @@ class _ToReceivePageState extends State<ToReceivePage> {
         itemCount: productsToReceive.length,
         itemBuilder: (context, index) {
           final product = productsToReceive[index];
-          final int remaining =
-              int.parse(product['quantity']!) - int.parse(product['received']!);
+          int quantity = int.tryParse(product['quantity'] ?? '0') ?? 0;
+          int received = int.tryParse(product['received'] ?? '0') ?? 0;
+          int alter = int.tryParse(product['alter'] ?? '0') ?? 0;
+          int remaining = quantity - received - alter;
+          final bool isCompleted = remaining == 0;
+
           return Card(
             child: ListTile(
               title: Text('${product['product']} - Remaining: $remaining'),
@@ -85,6 +126,9 @@ class _ToReceivePageState extends State<ToReceivePage> {
                   Text('Customer: ${product['customer']}'),
                   Text('Size: ${product['size']}'),
                   Text('Color: ${product['color']}'),
+                  Text('Alter: ${product['alter']}'),
+                  Text(
+                      'Status: ${isCompleted ? 'Completed' : 'Not Completed'}'),
                 ],
               ),
               onTap: () => _showEditReceivedDialog(context, product),

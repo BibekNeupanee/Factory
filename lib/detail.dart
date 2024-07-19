@@ -25,7 +25,8 @@ class _DetailPageState extends State<DetailPage> {
       'size': 'M',
       'quantity': '50',
       'date': '2023-07-01',
-      'received': '30',
+      'received': '40',
+      'alter': '5',
     },
     {
       'customer': 'Jane Smith',
@@ -33,9 +34,10 @@ class _DetailPageState extends State<DetailPage> {
       'code': 'Code2',
       'color': 'Black',
       'size': 'L',
-      'quantity': '30',
+      'quantity': '50',
       'date': '2023-06-15',
-      'received': '20',
+      'received': '4',
+      'alter': '2',
     },
     {
       'customer': 'Alice Johnson',
@@ -46,6 +48,7 @@ class _DetailPageState extends State<DetailPage> {
       'quantity': '40',
       'date': '2023-06-20',
       'received': '35',
+      'alter': '0',
     },
   ];
 
@@ -80,7 +83,6 @@ class _DetailPageState extends State<DetailPage> {
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
-
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -97,11 +99,9 @@ class _DetailPageState extends State<DetailPage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              LedgerPage()
-                              // LedgerPage(name: widget.name)
-                      ),
+                      MaterialPageRoute(builder: (context) => LedgerPage()
+                          // LedgerPage(name: widget.name)
+                          ),
                     );
                   },
                   child: Text('Ledger of ${widget.name}'),
