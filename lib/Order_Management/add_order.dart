@@ -25,16 +25,19 @@ class _AddOrderPageState extends State<AddOrderPage> {
   List<String> _colors = [];
   List<Map<String, TextEditingController>> _quantities = [];
   List<Order> _orders = [];
+  List<Map<String, TextEditingController>> _departments = [];
 
   TextEditingController _customerController = TextEditingController();
   TextEditingController _productController = TextEditingController();
   TextEditingController _codeController = TextEditingController();
   TextEditingController _orderDateController = TextEditingController();
   TextEditingController _deliveryDateController = TextEditingController();
+  TextEditingController _priceController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
   int _totalQuantity = 0;
+  double _totalPrice = 0.0;
 
   void _addNewColor() {
     setState(() {
@@ -42,7 +45,7 @@ class _AddOrderPageState extends State<AddOrderPage> {
       _quantities.add({
         for (var size in _selectedSizes)
           size: TextEditingController()
-            ..addListener(() => _updateTotalQuantity())
+            ..addListener(() => _updateTotalQuantityAndPrice())
       });
     });
   }
@@ -52,7 +55,7 @@ class _AddOrderPageState extends State<AddOrderPage> {
       _selectedSizes.add('');
       for (var quantity in _quantities) {
         quantity[_selectedSizes.last] = TextEditingController()
-          ..addListener(() => _updateTotalQuantity());
+          ..addListener(() => _updateTotalQuantityAndPrice());
       }
     });
   }
@@ -61,7 +64,7 @@ class _AddOrderPageState extends State<AddOrderPage> {
     setState(() {
       _colors.removeAt(index);
       _quantities.removeAt(index);
-      _updateTotalQuantity();
+      _updateTotalQuantityAndPrice();
     });
   }
 
@@ -72,7 +75,24 @@ class _AddOrderPageState extends State<AddOrderPage> {
       for (var quantity in _quantities) {
         quantity.remove(sizeToRemove);
       }
-      _updateTotalQuantity();
+      _updateTotalQuantityAndPrice();
+    });
+  }
+
+  void _addNewDepartment() {
+    setState(() {
+      _departments.add({
+        'department': TextEditingController(),
+        'price': TextEditingController()
+          ..addListener(() => _updateTotalQuantityAndPrice())
+      });
+    });
+  }
+
+  void _removeDepartment(int index) {
+    setState(() {
+      _departments.removeAt(index);
+      _updateTotalQuantityAndPrice();
     });
   }
 
@@ -89,6 +109,13 @@ class _AddOrderPageState extends State<AddOrderPage> {
         }
       }
 
+      List<DepartmentCost> departmentCosts = _departments.map((department) {
+        return DepartmentCost(
+          department: department['department']!.text,
+          price: double.parse(department['price']!.text),
+        );
+      }).toList();
+
       setState(() {
         _orders.add(Order(
           customer: _customerController.text,
@@ -96,7 +123,9 @@ class _AddOrderPageState extends State<AddOrderPage> {
           code: _codeController.text,
           orderDate: _orderDateController.text,
           deliveryDate: _deliveryDateController.text,
+          price: double.parse(_priceController.text),
           entries: entries,
+          departmentCosts: departmentCosts,
         ));
 
         // Clear fields after adding to list
@@ -105,23 +134,33 @@ class _AddOrderPageState extends State<AddOrderPage> {
         _codeController.clear();
         _orderDateController.clear();
         _deliveryDateController.clear();
+        _priceController.clear();
         _colors.clear();
         _selectedSizes.clear();
         _quantities.clear();
+        _departments.clear();
         _totalQuantity = 0;
+        _totalPrice = 0.0;
       });
     }
   }
 
-  void _updateTotalQuantity() {
+  void _updateTotalQuantityAndPrice() {
     int total = 0;
     for (var quantity in _quantities) {
       for (var controller in quantity.values) {
         total += int.tryParse(controller.text) ?? 0;
       }
     }
+
+    double price = double.tryParse(_priceController.text) ?? 0.0;
+    double departmentTotal = _departments.fold(0.0, (sum, department) {
+      return sum + (double.tryParse(department['price']!.text) ?? 0.0);
+    });
+
     setState(() {
       _totalQuantity = total;
+      _totalPrice = total * price + departmentTotal;
     });
   }
 
@@ -214,6 +253,23 @@ class _AddOrderPageState extends State<AddOrderPage> {
               },
               readOnly: true,
             ),
+            TextFormField(
+              controller: _priceController,
+              decoration: InputDecoration(labelText: 'Price'),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d*'))
+              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter price';
+                }
+                return null;
+              },
+              onChanged: (value) {
+                _updateTotalQuantityAndPrice();
+              },
+            ),
             SizedBox(height: 20),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -249,10 +305,10 @@ class _AddOrderPageState extends State<AddOrderPage> {
                                         _selectedSizes[index] = newValue!;
                                         // Update quantities map with new size
                                         for (var quantity in _quantities) {
-                                          quantity[newValue] =
-                                              TextEditingController()
-                                                ..addListener(() =>
-                                                    _updateTotalQuantity());
+                                          quantity[
+                                              newValue] = TextEditingController()
+                                            ..addListener(() =>
+                                                _updateTotalQuantityAndPrice());
                                         }
                                       });
                                     },
@@ -308,7 +364,8 @@ class _AddOrderPageState extends State<AddOrderPage> {
                           ..._selectedSizes.map((size) {
                             if (!_quantities[index].containsKey(size)) {
                               _quantities[index][size] = TextEditingController()
-                                ..addListener(() => _updateTotalQuantity());
+                                ..addListener(
+                                    () => _updateTotalQuantityAndPrice());
                             }
                             return TableCell(
                               child: TextFormField(
@@ -350,9 +407,67 @@ class _AddOrderPageState extends State<AddOrderPage> {
               ],
             ),
             SizedBox(height: 20),
-            Text(
-              'Total: $_totalQuantity',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: _departments.length,
+              itemBuilder: (context, index) {
+                return Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _departments[index]['department'],
+                        decoration: InputDecoration(labelText: 'Department'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter department';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _departments[index]['price'],
+                        decoration: InputDecoration(labelText: 'Price'),
+                        keyboardType:
+                            TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d+\.?\d*'))
+                        ],
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter price';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () => _removeDepartment(index),
+                    ),
+                  ],
+                );
+              },
+            ),
+            ElevatedButton(
+              onPressed: _addNewDepartment,
+              child: Text('Add Department'),
+            ),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Total Quantity: $_totalQuantity',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Total Price: \$$_totalPrice',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             SizedBox(height: 10),
             ElevatedButton(
@@ -369,8 +484,11 @@ class _AddOrderPageState extends State<AddOrderPage> {
                         Text("Code: ${order.code}"),
                         Text("Order Date: ${order.orderDate}"),
                         Text("Delivery Date: ${order.deliveryDate}"),
+                        Text("Price: ${order.price}"),
                         ...order.entries.map((entry) => Text(
                             "Color: ${entry.color}, Size: ${entry.size}, Quantity: ${entry.quantity}")),
+                        ...order.departmentCosts.map((departmentCost) => Text(
+                            "Department: ${departmentCost.department}, Price: ${departmentCost.price}")),
                         SizedBox(height: 10),
                       ],
                     ))
@@ -390,19 +508,31 @@ class Entry {
   Entry({required this.color, required this.size, required this.quantity});
 }
 
+class DepartmentCost {
+  final String department;
+  final double price;
+
+  DepartmentCost({required this.department, required this.price});
+}
+
 class Order {
   final String customer;
   final String product;
   final String code;
   final String orderDate;
   final String deliveryDate;
+  final double price;
   final List<Entry> entries;
+  final List<DepartmentCost> departmentCosts;
 
-  Order(
-      {required this.customer,
-      required this.product,
-      required this.code,
-      required this.orderDate,
-      required this.deliveryDate,
-      required this.entries});
+  Order({
+    required this.customer,
+    required this.product,
+    required this.code,
+    required this.orderDate,
+    required this.deliveryDate,
+    required this.price,
+    required this.entries,
+    required this.departmentCosts,
+  });
 }

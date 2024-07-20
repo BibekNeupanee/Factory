@@ -4,9 +4,7 @@ import 'dashboard.dart';
 import 'login.dart';
 
 class NavBar extends StatelessWidget {
-  final List<String> menuItems = [
-    'Dashboard', 'Add Order','View Order','Contact', 'About Us'
-  ];
+  final List<String> menuItems = ['Tailor', 'Add Order', 'View Order'];
 
   Future<void> _logout(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -16,7 +14,7 @@ class NavBar extends StatelessWidget {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => LoginPage()),
-          (Route<dynamic> route) => false,
+      (Route<dynamic> route) => false,
     );
   }
 
@@ -35,7 +33,7 @@ class NavBar extends StatelessWidget {
             future: _getUsername(),
             builder: (context, snapshot) {
               String username = snapshot.data ?? 'Unknown User';
-              String name =username.toUpperCase();
+              String name = username.toUpperCase();
               return DrawerHeader(
                 decoration: BoxDecoration(
                   color: Colors.blue,

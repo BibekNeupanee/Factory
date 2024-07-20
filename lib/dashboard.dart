@@ -43,7 +43,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildBody() {
-    if (widget.title == 'Dashboard') {
+    if (widget.title == 'Tailor') {
       return Column(
         children: [
           TextField(
