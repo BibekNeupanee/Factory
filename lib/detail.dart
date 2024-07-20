@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'add_product.dart';
-import 'edit_product.dart';
-import 'to_receive.dart';
-import 'assign_product.dart';
-import 'ledger.dart';
+import 'Product_Management/add_product.dart';
+import 'Product_Management/edit_product.dart';
+import 'Product_Management/to_receive.dart';
+import 'Product_Management/assign_product.dart';
+import 'Ledger/ledger.dart';
 
 class DetailPage extends StatefulWidget {
   final String name;

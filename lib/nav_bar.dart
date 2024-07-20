@@ -5,7 +5,7 @@ import 'login.dart';
 
 class NavBar extends StatelessWidget {
   final List<String> menuItems = [
-    'Dashboard', 'Add Order', 'Contact', 'About Us'
+    'Dashboard', 'Add Order','View Order','Contact', 'About Us'
   ];
 
   Future<void> _logout(BuildContext context) async {
